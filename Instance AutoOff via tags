@@ -1,0 +1,28 @@
+#/**
+ # Author: Nick Barton-Wells
+ # Language: Python 2.7
+ # Function: AWS Lambda function to power down instances based on the "AutoOff" tag
+ # Script Name: autooff.py
+ # Notes: note the relevant tags required, you may also require autoon.py
+ #/
+ 
+import boto3
+ec2 = boto3.resource('ec2')
+
+def lambda_handler(event, context):
+    filters = [{
+            'Name': 'tag:AutoOff',
+            'Values': ['True']
+        },
+        {
+            'Name': 'instance-state-name', 
+            'Values': ['running']
+        }
+    ]
+    
+    instances = ec2.instances.filter(Filters=filters)
+
+    runningInstances = [instance.id for instance in instances]
+    
+    if len(runningInstances) > 0:
+        shuttingDown = ec2.instances.filter(InstanceIds=runningInstances).stop()
